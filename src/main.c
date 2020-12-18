@@ -10,31 +10,55 @@
 #include <unistd.h>
 #include <stdbool.h>
 
-#include "future.h"
+#include <myQueue.h>
+#include <commands/baseCommand.h>
+MyQueue_t myQ;
 
-void* func(void * arg) {
-  promise* p = (promise*) arg;
-  printf("\tstarted thread\n");
-  sleep(3);
-  printf("\tthread will set promise\n");
-  promise_set(p, 42);
-  printf("\tstopping thread\n");
-  return NULL;
+extern const pCtorFunc ctorsArr[];
+
+extern const u_int8_t ctorCnt;
+//add command to queue
+int addtoQueue(Command_t* cmd){
+	MyQueue_t *mq = &myQ;
+	pthread_mutex_lock(&mq->mu_queue);
+	if(isFull(mq))
+		return 1;
+	insert(mq, cmd);
+	pthread_mutex_unlock(&mq->mu_queue);
+	pthread_cond_signal(&mq->cond);
+	return 0;
 }
 
 
+// this is  sms consumer for queue
+//It waits for a message in the queue if there is no message then waits for it
+//else it get the messages and process them
 int main(){
 
-	long t;
-	printf("main thread\n");
-	future* f = future_create(func);
-	promise* p = promise_create();
-	future_start(f, p);
+	MyQueue_t *mq = &myQ;
+	//init all constructors
+	for(int i=0;i<ctorCnt;i++){
+		ctorsArr[i]();
+	}
 
-	printf("got result from future: %d\n", promise_get(p));
+	while(1)
+	{
+		pthread_mutex_lock(&mq->mu_queue);
+		if(!isEmpty(mq))
+		{
+			Command_t* cmd =(Command_t*)peek( mq);
+			if(cmd->fpProc(cmd)!=1)
+			{
+				removeData( mq);//delete processed data from queue
+			}
+			pthread_mutex_unlock(&mq->mu_queue);
 
-	promise_close(p);
-	future_close(f);
-	pthread_exit(NULL);
+		}
+		else
+		{
+			pthread_cond_wait(&mq->cond, &mq->mu_queue);
+		}
+	}
+
 	return 0;
 }
