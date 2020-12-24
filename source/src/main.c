@@ -38,7 +38,7 @@ initSIM800(){
 //It waits for a message in the queue if there is no message then waits for it
 //else it get the messages and process them
 
-
+#ifndef TEST
 int main(){
 
 	MyQueue_t *mq = &myQ;
@@ -68,3 +68,13 @@ int main(){
 
 	return 0;
 }
+#elif
+#include <stdio.h>
+#include "gtest/gtest.h"
+
+GTEST_API_ int main(int argc, char **argv) {
+  printf("Running main() from gtest_main.cc\n");
+  testing::InitGoogleTest(&argc, argv);
+  return RUN_ALL_TESTS();
+}
+#endif

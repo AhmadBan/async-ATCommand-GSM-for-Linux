@@ -1,2 +1,0 @@
-
-int factorial(int a);
