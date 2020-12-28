@@ -22,9 +22,9 @@ enum{
 
 };
 
-typedef struct Command_t Command_t;
+typedef struct Cmd_t Cmd_t;
 
- struct Command_t{
+ struct Cmd_t{
 
 	uint8_t id;
 	uint8_t procId;
@@ -36,38 +36,38 @@ typedef struct Command_t Command_t;
 	//parameter which I use 450 character
 	char commandParam[450];
 	char finishParam[10];
-	int32_t (*fpInit)(struct Command_t* me);
+	int32_t (*fpInit)(struct Cmd_t* me);
 	uint16_t initDelayMs;
-	int32_t (*fpSend)(struct Command_t* me);
+	int32_t (*fpSend)(struct Cmd_t* me);
 	uint16_t sendDelayMs;
-	int32_t (*fpReceive)(struct Command_t* me);
+	int32_t (*fpReceive)(struct Cmd_t* me);
 	char expectedAnswerOnSucessCommand[100];
 	char expectedAnswerOnError[100];
 	uint16_t receiveDelayMs;
-	int32_t (*fpProc)(struct Command_t* me);
+	int32_t (*fpProc)(struct Cmd_t* me);
 	int8_t retry;
-	void (*fpReset)(void);
+	int32_t (*fpReset)(struct Cmd_t* me);
 	int port;
-	int32_t (*fpCtor)(struct Command_t* me);
+	int32_t (*fpCtor)(struct Cmd_t* me);
 };
 
 typedef  void (*pCtorFunc)(void);
-void base_ctor(Command_t *pbase);
-int baseCheckPort(struct Command_t* me);
+void base_ctor(Cmd_t *pbase);
+int baseCheckPort(struct Cmd_t* me);
 
 
 //This function init sim800 to get ready before main command
 //returns -1 on Port problem
 //returns 1 on error
 //returns 0 on success
-int32_t baseInit(Command_t* me);
+int32_t baseInit(Cmd_t* me);
 
 
 //Send start command part of a command and take thread to sleep for sendDelayMs.
 //returns -1 on Port problem
 //returns 1 on error
 //returns 0 on success
-int32_t baseSend(Command_t* me);
+int32_t baseSend(Cmd_t* me);
 
 
 
@@ -76,12 +76,12 @@ int32_t baseSend(Command_t* me);
 //returns -1 on Port problem
 //returns 1 on error
 //returns 0 on success
-int32_t baseReceive(Command_t* me);
+int32_t baseReceive(Cmd_t* me);
 
-
+int32_t baseReset(Cmd_t* me);
 //base procedures to send command and get result
 //returns -1 on Port problem
 //returns 1 on error
 //returns 0 on success
-int32_t baseProc(Command_t* me);
+int32_t baseProc(Cmd_t* me);
 #endif /* INC_PACKETS_H_ */

@@ -12,7 +12,7 @@
  * SMSPacket_t Derived from Command_t
  */
 typedef struct{
-	Command_t super;
+	Cmd_t super;
 	char phoneNumber[20];//the phone number is not more than 20 character
 	char message[512];//sim800 can not support more than 512 character
 }SMSPacket_T;

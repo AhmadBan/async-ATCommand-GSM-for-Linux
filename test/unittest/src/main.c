@@ -25,7 +25,7 @@ void initQueue(MyQueue_t* myQ){
 	pthread_mutex_init(&myQ->mu_queue, NULL);
 	pthread_cond_init(&myQ->cond, NULL);
 }
-int addtoQueue(Command_t* cmd,MyQueue_t* myQ){
+int addToQueue(Cmd_t* cmd,MyQueue_t* myQ){
 	MyQueue_t *mq = myQ;
 	pthread_mutex_lock(&mq->mu_queue);
 	if(isFull(mq)){
@@ -38,6 +38,21 @@ int addtoQueue(Command_t* cmd,MyQueue_t* myQ){
 	return mq->itemCount;
 }
 
+Cmd_t* waitForQueue(MyQueue_t* mq){
+	pthread_mutex_lock(&mq->mu_queue);
+	if(!isEmpty(mq))
+	{
+		Cmd_t* cmd =(Cmd_t*)peek( mq);
+
+		pthread_mutex_unlock(&mq->mu_queue);
+		return cmd;
+	}
+	else
+	{
+		pthread_cond_wait(&mq->cond, &mq->mu_queue);
+	}
+	return NULL;
+}
 
 initSIM800(){
 
@@ -46,4 +61,25 @@ initSIM800(){
 // this is  sms consumer for queue
 //It waits for a message in the queue if there is no message then waits for it
 //else it get the messages and process them
-
+//int main(){
+//
+//	MyQueue_t *mq = &myQ;
+//
+//	//init all constructors
+//	for(int i=0;i<ctorCnt;i++){
+//		ctorsArr[i]();
+//	}
+//
+//	while(1)
+//	{
+//
+//		Command_t* cmd=waitForQueue(mq);
+//
+//		if(cmd->fpProc(cmd)!=1)
+//		{
+//			removeData( mq);//delete processed data from queue
+//		}
+//	}
+//
+//	return 0;
+//}

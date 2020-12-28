@@ -11,12 +11,22 @@
 //returns -1 on Port problem
 //returns 1 on error
 //returns 0 on success
-int baseCheckPort(Command_t* me){
+int baseCheckPort(Cmd_t* me){
 	char temp[100];
 	int size;
+	 char cwd[255];
+	   if (getcwd(cwd, sizeof(cwd)) != NULL) {
+	       printf("Current working dir: %s\n", cwd);
+	   } else {
+	       perror("getcwd() error");
+	       return 1;
+	   }
 	size=read(me->port, temp, 100);
-	if(size<0)
+	if(size<0){
+		perror("File not Found.!");
+
 		return -1;
+	}
 	else if(size>0)
 	{
 		if(strstr(temp, "ERROR") != NULL)
@@ -29,8 +39,8 @@ int baseCheckPort(Command_t* me){
 //returns -1 on Port problem
 //returns 1 on error
 //returns 0 on success
-int32_t baseInit(Command_t* me){
-	if(write(me->port, me->initCommand, sizeof(me->initCommand))==-1)
+int32_t baseInit(Cmd_t* me){
+	if(write(me->port, me->initCommand, strlen(me->initCommand))==-1)
 		return -1;
 	sleep(me->initDelayMs);
 	return baseCheckPort(me);
@@ -40,7 +50,7 @@ int32_t baseInit(Command_t* me){
 //returns -1 on Port problem
 //returns 1 on error
 //returns 0 on success
-int32_t baseSend(Command_t* me){
+int32_t baseSend(Cmd_t* me){
 
 	if(write(me->port, me->command, sizeof(me->command))==-1)
 		return -1;
@@ -53,27 +63,23 @@ int32_t baseSend(Command_t* me){
 //returns -1 on Port problem
 //returns 1 on error
 //returns 0 on success
-int32_t baseReceive(Command_t* me){
+int32_t baseReceive(Cmd_t* me){
 	char content[100];
 	int size=0;
 	int32_t res=0;
-	if(write(me->port, me->finishParam, sizeof(me->finishParam))==-1)//write finish command and inform to process
+	res=write(me->port, me->finishParam, strlen(me->finishParam));
+	if(res==-1)//write finish command and inform to process
 		return -1;
-	sleep(me->receiveDelayMs);//wait until sim process command
-	res=baseCheckPort(me);
-	if(res!=0)
-		return res;
-
-
 	for(int i=0;i<me->retry;i++){//attempt 10 times in worst cases
+		sleep(me->receiveDelayMs);
 		size=read(me->port, content, 100);
 		if(size<0)
 			return -1;
 		else if(size>0)
 			break;
-		sleep(me->receiveDelayMs);
+
 		if(i==me->retry-1)
-			me->fpReset();//all retry failed so reset sim800l
+			me->fpReset(me);//all retry failed so reset sim800l
 	}
 
 	//if program reach here then means it received something
@@ -87,7 +93,7 @@ int32_t baseReceive(Command_t* me){
 //returns -1 on Port problem
 //returns 1 on error
 //returns 0 on success
-int32_t baseProc(Command_t* me){
+int32_t baseProc(Cmd_t* me){
 	int32_t res;
 	res=baseInit(me);
 	if(res!=0)
@@ -105,14 +111,22 @@ int32_t baseProc(Command_t* me){
 
 }
 
+
+int32_t baseReset(Cmd_t* me){
+	printf("implement a base reset here");
+	return 1;
+}
+
+
 //this is the default constructor that can be used in each command
 //to initialize function pointers by default functions
 
-void base_ctor(Command_t *pbase){
+void base_ctor(Cmd_t *pbase){
 
 	pbase->fpInit=baseInit;
 	pbase->fpSend=baseSend;
 	pbase->fpReceive=baseReceive;
 	pbase->fpProc=baseProc;
+
 
 }
