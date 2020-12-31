@@ -17,5 +17,7 @@ typedef struct{
 	char message[512];//sim800 can not support more than 512 character
 }SMSPacket_T;
 
-
+void smsSend_ctor(Cmd_t* me);
+int32_t SMSSend(Cmd_t* me);
+int32_t SMSReceive(Cmd_t* me);
 #endif /* INC_PACKETS_SMSSENDPACKETS_H_ */

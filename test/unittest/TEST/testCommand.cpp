@@ -116,14 +116,11 @@ TEST(baseCommandTest, baseSend) {
 	content[size]=0;
 
 	EXPECT_EQ(0, strcmp(content,cmd.command));
-
-
-
 }
 
 
 
-TEST(baseCommandTest, baseReceiveWriteTest) {
+TEST(baseCommandTest, baseReceiveTest) {
 	int fileDescriptor,size=0;
 	char filename[]="testFile";
 	char content[]="cat\r\r\nOK\r\n";
@@ -154,5 +151,15 @@ TEST(baseCommandTest, baseReceiveWriteTest) {
 	EXPECT_EQ(0,strcmp("\r",output));
 	EXPECT_EQ(0,ret);
 
+
+}
+
+TEST(baseCommandTest, baseResetTest) {
+	Cmd_t cmd;
+
+	cmd.fpReset=baseReset;
+	cmd.fpReset(&cmd);
+
+	EXPECT_EQ(1,1);
 
 }

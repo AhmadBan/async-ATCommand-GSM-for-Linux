@@ -13,9 +13,9 @@
 #include <myQueue.h>
 #include <commands/baseCommand.h>
 
-extern const pCtorFunc ctorsArr[];
 
-extern const u_int8_t ctorCnt;
+
+
 //add command to queue
 MyQueue_t globalQ;
 void initQueue(MyQueue_t* myQ){
@@ -54,7 +54,7 @@ Cmd_t* waitForQueue(MyQueue_t* mq){
 	return NULL;
 }
 
-initSIM800(){
+void initSIM800(void){
 
 }
 

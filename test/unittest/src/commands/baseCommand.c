@@ -51,11 +51,9 @@ int32_t baseInit(Cmd_t* me){
 //returns 1 on error
 //returns 0 on success
 int32_t baseSend(Cmd_t* me){
-
 	if(write(me->port, me->command, sizeof(me->command))==-1)
 		return -1;
 	sleep(me->sendDelayMs);
-
 	return baseCheckPort(me);
 }
 //send finish command (usually \r ) and wait for sim800 to respond.it also retries to get
