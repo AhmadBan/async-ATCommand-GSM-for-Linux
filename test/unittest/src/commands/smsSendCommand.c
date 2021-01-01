@@ -35,7 +35,7 @@ SMSPacket_T smsSend;
 //returns -1 on Port problem
 //returns 1 on error
 //returns 0 on success
-int32_t SMSReceive(Cmd_t* me){
+int32_t SMSReceiveResponse(Cmd_t* me){
 	char sms[512]={0};
 	char content[100]={0};
 	int size=0;
@@ -62,7 +62,7 @@ int32_t SMSReceive(Cmd_t* me){
 	else
 		return 0;
 }
-void smsSend_ctor(Cmd_t* me){
+void SMSSend_ctor(Cmd_t* me){
 	SMSPacket_T *sms=me;
 	sms->super.id=SMS_SEND_SIG;
 	//psmsSend->super.DelayMs=3;//3 seconds
@@ -70,7 +70,7 @@ void smsSend_ctor(Cmd_t* me){
 			SMS_SEND_SIG,//id
 			0,//procid
 			0,//priority
-			"AT+CMGF=1\r\n",//initCommand
+			"",//initCommand
 			"AT+CMGS",//command[50]
 			"\032",//finishParam[2];
 			0,//fpInit
@@ -89,7 +89,7 @@ void smsSend_ctor(Cmd_t* me){
 	sms->super=base;
 	sms->super.fpInit=baseInit;
 	sms->super.fpSend=SMSSend;
-	sms->super.fpReceive=SMSReceive;
+	sms->super.fpReceive=SMSReceiveResponse;
 	sms->super.fpProc=baseProc;
 
 }

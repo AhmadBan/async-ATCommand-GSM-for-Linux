@@ -6,9 +6,11 @@
  */
 #include <commands/baseCommand.h>
 
-extern void smsSend_ctor(void);
+extern void SMSSend_ctor(void);
 const pCtorFunc ctorsArr[] =
 {
-		smsSend_ctor,
+		SMSSend_ctor,
+
+
 };
 const u_int8_t ctorCnt = sizeof( ctorsArr ) / sizeof( ctorsArr[0] );

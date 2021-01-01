@@ -21,7 +21,7 @@ extern "C" {
 
 TEST(SMSCommandTest, SmsCtorTest) {
 	SMSPacket_T cmd;
-	smsSend_ctor((Cmd_t*)&cmd);
+	SMSSend_ctor((Cmd_t*)&cmd);
 	EXPECT_EQ(cmd.super.id, SMS_SEND_SIG);
 	EXPECT_EQ(cmd.super.priority, 0);
 	EXPECT_EQ(cmd.super.procId, 0);
@@ -30,7 +30,7 @@ TEST(SMSCommandTest, SmsCtorTest) {
 
 }
 
-TEST(SMSCommandTest, SMSSendTest) {
+TEST(SMSCommandTest, SMSSendTestOK) {
 	int fileDescriptor;
 	char filename[]="SmSTestFile";
 	SMSPacket_T cmd;
@@ -39,7 +39,7 @@ TEST(SMSCommandTest, SMSSendTest) {
 	char output[60];
 	char phoneNumber[]="+989350542618";
 	ret=remove(filename);
-	smsSend_ctor((Cmd_t*)&cmd);
+	SMSSend_ctor((Cmd_t*)&cmd);
 	fileDescriptor  = open(filename, O_RDWR | O_CREAT);
 	if (fileDescriptor == -1) {
 		perror("File not Found.!");
@@ -52,15 +52,53 @@ TEST(SMSCommandTest, SMSSendTest) {
 	write(cmd.super.port,content, strlen(content));
 	lseek(cmd.super.port,0,SEEK_SET);
 
-	SMSSend((Cmd_t*)&cmd);
+	ret=SMSSend((Cmd_t*)&cmd);
 	close(fileDescriptor);
 	fileDescriptor = open(filename, O_RDONLY);
 	size = read(fileDescriptor, output, 24);
 	output[size]=0;
 	EXPECT_EQ(0,strcmp("AT+CMGS=\"+989350542618\"\r",output));
+	EXPECT_EQ(ret,0);
 
 
 }
+
+TEST(SMSCommandTest, SMSSendTestError) {
+	int fileDescriptor;
+	char filename[]="SmSTestFile";
+	SMSPacket_T cmd;
+	int ret,size;
+	char content[]="111111111111111111111111";
+	char answer[]="\r\nERROR\r\n\r\n";
+	char output[60];
+	char phoneNumber[]="+989350542618";
+	ret=remove(filename);
+	SMSSend_ctor((Cmd_t*)&cmd);
+	fileDescriptor  = open(filename, O_RDWR | O_CREAT);
+	if (fileDescriptor == -1) {
+		perror("File not Found.!");
+		exit(1);
+	}
+
+	cmd.super.port=fileDescriptor;
+	memcpy(cmd.phoneNumber,phoneNumber,strlen(phoneNumber));
+	cmd.phoneNumber[strlen(phoneNumber)]=0;
+	write(cmd.super.port,content, strlen(content));
+	write(cmd.super.port,answer, strlen(answer));
+	lseek(cmd.super.port,0,SEEK_SET);
+
+	ret=SMSSend((Cmd_t*)&cmd);
+	close(fileDescriptor);
+	fileDescriptor = open(filename, O_RDONLY);
+	size = read(fileDescriptor, output, 24);
+	output[size]=0;
+	EXPECT_EQ(0,strcmp("AT+CMGS=\"+989350542618\"\r",output));
+	EXPECT_EQ(ret,1);
+
+
+}
+
+
 
 TEST(SMSCommandTest, SMSReceiveTestOK) {
 	int fileDescriptor;
@@ -71,7 +109,7 @@ TEST(SMSCommandTest, SMSReceiveTestOK) {
 	char output[60];
 	char messaage[]="this is a test message";
 	ret=remove(filename);
-	smsSend_ctor((Cmd_t*)&cmd);
+	SMSSend_ctor((Cmd_t*)&cmd);
 	fileDescriptor  = open(filename, O_RDWR | O_CREAT);
 	if (fileDescriptor == -1) {
 		perror("File not Found.!");
@@ -84,7 +122,7 @@ TEST(SMSCommandTest, SMSReceiveTestOK) {
 	write(cmd.super.port,content, strlen(content));
 	lseek(cmd.super.port,0,SEEK_SET);
 
-	ret=SMSReceive((Cmd_t*)&cmd);
+	ret=SMSReceiveResponse((Cmd_t*)&cmd);
 
 	close(fileDescriptor);
 	fileDescriptor = open(filename, O_RDONLY);
@@ -105,7 +143,7 @@ TEST(SMSCommandTest, SMSReceiveTestError) {
 	char output[60];
 	char messaage[]="this is a test message";
 	ret=remove(filename);
-	smsSend_ctor((Cmd_t*)&cmd);
+	SMSSend_ctor((Cmd_t*)&cmd);
 	fileDescriptor  = open(filename, O_RDWR | O_CREAT);
 	if (fileDescriptor == -1) {
 		perror("File not Found.!");
@@ -118,7 +156,7 @@ TEST(SMSCommandTest, SMSReceiveTestError) {
 	write(cmd.super.port,content, strlen(content));
 	lseek(cmd.super.port,0,SEEK_SET);
 
-	ret=SMSReceive((Cmd_t*)&cmd);
+	ret=SMSReceiveResponse((Cmd_t*)&cmd);
 
 	close(fileDescriptor);
 	fileDescriptor = open(filename, O_RDONLY);
@@ -128,3 +166,5 @@ TEST(SMSCommandTest, SMSReceiveTestError) {
 	EXPECT_EQ(ret,1);
 
 }
+
+

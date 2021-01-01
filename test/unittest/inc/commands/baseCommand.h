@@ -18,7 +18,10 @@
 
 enum{
 	SMS_SEND_SIG=0,
-
+	DISABLE_SMS_NOTIFICATION_SIG,
+	DISABLE_CALL_SIG,
+	READ_SMS_SIG,
+	SMS_TEXT_MODE_SIG
 
 };
 
@@ -37,14 +40,15 @@ typedef struct Cmd_t Cmd_t;
 	int32_t (*fpSend)(struct Cmd_t* me);
 	uint16_t sendDelayMs;
 	int32_t (*fpReceive)(struct Cmd_t* me);
-	char expectedAnswerOnSucessCommand[100];
-	char expectedAnswerOnError[100];
+	char expectedAnswerOnSucessCommand[10];
+	char expectedAnswerOnError[10];
 	uint16_t receiveDelayMs;
 	int32_t (*fpProc)(struct Cmd_t* me);
 	int8_t retry;
 	int32_t (*fpReset)(struct Cmd_t* me);
 	int port;
 	int32_t (*fpCtor)(struct Cmd_t* me);
+
 };
 
 typedef  void (*pCtorFunc)(void);

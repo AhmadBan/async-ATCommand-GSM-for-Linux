@@ -81,7 +81,7 @@ int32_t baseReceive(Cmd_t* me){
 	}
 
 	//if program reach here then means it received something
-	if(strstr(content,"OK")== NULL)
+	if(strstr(content,me->expectedAnswerOnError)== NULL)
 		return 1;
 	else
 		return 0;
