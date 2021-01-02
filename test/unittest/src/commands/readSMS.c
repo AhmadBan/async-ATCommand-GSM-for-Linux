@@ -25,7 +25,7 @@ void readSMS_ctor(Cmd_t* me){
 			"\r\nERROR\r\n",//expectedAnswerOnError
 			1,//receiveDelayMs
 			0,//fpProc
-			10,//retry
+			1,//retry
 			0//	port
 	};
 	*me=base;
@@ -46,15 +46,15 @@ int32_t SMSReceiveAllMsg(Cmd_t* me){
 	int32_t res=0;
 	char command[]="\r";
 	char output[30];
-	char msg[513]={0};
-	msg[512]=0;//make sure last character is null
+	char msg[768]={0};
+	msg[767]=0;//make sure last character is null
 	ReadSMS_t* readSMS=me;
 
 	if(write(me->port, command, strlen(command))==-1)
 		return -1;
 	for(int i=0;i<me->retry;i++){//attempt 10 times in worst cases
 		sleep(me->receiveDelayMs);
-		size=read(me->port, msg, 1023);
+		size=read(me->port, msg, 767);
 		if(size<0)
 			return -1;
 		else if(size>0)
@@ -91,7 +91,7 @@ int32_t SMSReceiveAllMsg(Cmd_t* me){
 		}
 		for(int i=0;i<me->retry;i++){//attempt 10 times in worst cases
 			sleep(me->receiveDelayMs);
-			size=read(me->port, msg, 1023);
+			size=read(me->port, msg, 20);
 			if(size<0)
 				return -1;
 			else if(size>0)

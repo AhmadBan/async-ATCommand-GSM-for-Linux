@@ -25,7 +25,7 @@ TEST(SMSCommandTest, SmsCtorTest) {
 	EXPECT_EQ(cmd.super.id, SMS_SEND_SIG);
 	EXPECT_EQ(cmd.super.priority, 0);
 	EXPECT_EQ(cmd.super.procId, 0);
-	EXPECT_EQ(strcmp(cmd.super.initCommand,"AT+CMGF=1\r\n"), 0);
+	EXPECT_EQ(strcmp(cmd.super.command,"AT+CMGS"), 0);
 	//TODO:and so on for all field
 
 }
