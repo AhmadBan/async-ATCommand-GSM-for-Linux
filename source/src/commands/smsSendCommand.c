@@ -26,7 +26,7 @@ SMSPacket_T smsSend;
 
 	if(write(me->port, commandNo, size)==-1)
 		return -1;
-	sleep(me->sendDelayMs);
+	sleep(me->reqDelayMs);
 
 	return baseCheckPort(me);
 }
@@ -45,7 +45,7 @@ int32_t SMSReceiveResponse(Cmd_t* me){
 	if(write(me->port, sms, size)==-1)
 		return -1;
 	for(int i=0;i<me->retry;i++){//attempt 10 times in worst cases
-		sleep(me->receiveDelayMs);
+		sleep(me->respDelayMs);
 		size=read(me->port, content, 100);
 		if(size<0)
 			return -1;
@@ -72,17 +72,17 @@ void SMSSend_ctor(Cmd_t* me){
 			0,//priority
 			"AT+CMGS",//command[50]
 			"\032",//finishParam[2];
-			1,//initDelayMs;
 			0,	//fpSend
 			1,//sendDelayMs
 			0,//fpReceive
+			5,//receiveDelayMs
 			"+CMGS:",//expectedAnswerOnSucess
 			"",//expectedAnswerOnError
-			5,//receiveDelayMs
 			0,//fpProc
 			10,//retry
 			0,//	port
-			0//user callback
+			0,//user callback on success
+			0//user callback on error
 	};
 
 	sms->super=base;

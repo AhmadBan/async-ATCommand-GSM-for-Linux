@@ -15,17 +15,17 @@ void readSMS_ctor(Cmd_t* me){
 			0,//priority
 			"AT+CMGL=\"ALL\"",//command[50]
 			"AT+CMGD",//finishParam[10];
-			1,//initDelayMs;
 			0,	//fpSend
 			1,//sendDelayMs
 			0,//fpReceive
+			1,//receiveDelayMs
 			"+CMGL:",//expectedAnswerOnSucess
 			"\r\nERROR\r\n",//expectedAnswerOnError
-			1,//receiveDelayMs
 			0,//fpProc
 			1,//retry
 			0,//	port
-			0//user callback
+			0,//user callback on success
+			0//user callback on error
 	};
 	*me=base;
 
@@ -51,7 +51,7 @@ int32_t SMSReceiveAllMsg(Cmd_t* me){
 	if(write(me->port, command, strlen(command))==-1)
 		return -1;
 	for(int i=0;i<me->retry;i++){//attempt 10 times in worst cases
-		sleep(me->receiveDelayMs);
+		sleep(me->respDelayMs);
 		size=read(me->port, msg, 767);
 		if(size<0)
 			return -1;
@@ -88,7 +88,7 @@ int32_t SMSReceiveAllMsg(Cmd_t* me){
 			return -1;
 		}
 		for(int i=0;i<me->retry;i++){//attempt 10 times in worst cases
-			sleep(me->receiveDelayMs);
+			sleep(me->respDelayMs);
 			size=read(me->port, msg, 20);
 			if(size<0)
 				return -1;

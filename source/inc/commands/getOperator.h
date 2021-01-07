@@ -11,7 +11,7 @@
 
 typedef struct{
 	Cmd_t super;
-	char* operator[30];
+	char operator[30];
 
 }GetOperator_t;
 void getOperator_ctor(Cmd_t* me);

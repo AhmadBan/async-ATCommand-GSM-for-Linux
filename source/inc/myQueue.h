@@ -24,6 +24,13 @@ typedef struct {
 	pthread_cond_t cond;
 }MyQueue_t;
 
+
+void initQueue(MyQueue_t* myQ);
+
+int addToQueue(Cmd_t* cmd,MyQueue_t* myQ);
+
+Cmd_t* waitForQueue(MyQueue_t* mq);
+
 Cmd_t* peek(MyQueue_t* q) ;
 
 bool isEmpty(MyQueue_t* q);

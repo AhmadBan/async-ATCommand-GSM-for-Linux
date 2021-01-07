@@ -49,3 +49,46 @@ Cmd_t* removeData(MyQueue_t* q) {
    q->itemCount--;
    return data;
 }
+
+void initQueue(MyQueue_t* myQ){
+	myQ->rear=0;
+	myQ->front=0;
+	myQ->itemCount=0;
+	if(pthread_mutex_init(&myQ->mu_queue, NULL)!=0)
+	{
+		printf("\n mutex init has failed\n");
+	    return 1;
+	}
+	 if(pthread_cond_init(&myQ->cond, NULL)!=0){
+		 printf("\n cond init has failed\n");
+		 return 1;
+	 }
+}
+int addToQueue(Cmd_t* cmd,MyQueue_t* myQ){
+	MyQueue_t *mq = myQ;
+	pthread_mutex_lock(&mq->mu_queue);
+	if(isFull(mq)){
+		pthread_mutex_unlock(&mq->mu_queue);
+		return -1;
+	}
+	insert(mq, cmd);
+	pthread_mutex_unlock(&mq->mu_queue);
+	pthread_cond_signal(&mq->cond);
+	return mq->itemCount;
+}
+
+Cmd_t* waitForQueue(MyQueue_t* mq){
+	pthread_mutex_lock(&mq->mu_queue);
+	if(!isEmpty(mq))
+	{
+		Cmd_t* cmd =(Cmd_t*)peek( mq);
+
+		pthread_mutex_unlock(&mq->mu_queue);
+		return cmd;
+	}
+	else
+	{
+		pthread_cond_wait(&mq->cond, &mq->mu_queue);
+	}
+	return NULL;
+}

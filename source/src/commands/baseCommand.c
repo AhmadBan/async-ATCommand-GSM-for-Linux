@@ -37,7 +37,7 @@ int baseCheckPort(Cmd_t* me){
 int32_t baseReq(Cmd_t* me){
 	if(write(me->port, me->command, strlen(me->command))==-1)
 		return -1;
-	sleep(me->sendDelayMs);
+	sleep(me->reqDelayMs);
 	return baseCheckPort(me);
 }
 //send finish command (usually \r ) and wait for sim800 to respond.it also retries to get
@@ -53,7 +53,7 @@ int32_t baseRes(Cmd_t* me){
 	if(res==-1)//write finish command and inform to process
 		return -1;
 	for(int i=0;i<me->retry;i++){//attempt 10 times in worst cases
-		sleep(me->receiveDelayMs);
+		sleep(me->respDelayMs);
 		size=read(me->port, content, 100);
 		if(size<0)
 			return -1;
@@ -107,11 +107,7 @@ int32_t baseReset(Cmd_t* me){
 //to initialize function pointers by default functions
 
 void base_ctor(Cmd_t *pbase){
-
-
 	pbase->fpRequest=baseReq;
 	pbase->fpResponse=baseRes;
 	pbase->fpProc=baseProc;
-
-
 }

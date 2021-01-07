@@ -15,17 +15,18 @@ void deleteSMS_ctor(Cmd_t* me){
 			0,//priority
 			"AT+CMGD=",//command[50]
 			"\r",//finishParam[2];
-			1,//initDelayMs;
 			0,	//fpSend
 			1,//sendDelayMs
 			0,//fpReceive
+			1,//receiveDelayMs
 			"\r\nOK\r\n",//expectedAnswerOnSucess
 			"\r\nERROR\r\n",//expectedAnswerOnError
-			1,//receiveDelayMs
+
 			0,//fpProc
 			10,//retry
 			0,//	port
-			0//user callback
+			0,//user callback on success
+			0//user callback on error
 	};
 	delSMS->super=base;
 	delSMS->super.fpRequest=delCommand;
@@ -38,15 +39,12 @@ void deleteSMS_ctor(Cmd_t* me){
 
 int32_t delCommand(Cmd_t* me){
 	char commandNo[70]={0};
-
 	int size=0;
 
 	DeleteSMSPacket_T* delCmd=(DeleteSMSPacket_T*)me;
 	size=sprintf(commandNo,"%s=%d",delCmd->super.command,delCmd->msgId);
-
 	if(write(me->port, commandNo, size)==-1)
 		return -1;
-	sleep(me->sendDelayMs);
-
+	sleep(me->reqDelayMs);
 	return baseCheckPort(me);
 }
