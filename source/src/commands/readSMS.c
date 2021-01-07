@@ -5,7 +5,7 @@
  *      Author: Ahmad
  */
 #include "commands/readSMS.h"
-#include <commands/deleteSMS.h>
+
 void readSMS_ctor(Cmd_t* me){
 
 
@@ -13,10 +13,8 @@ void readSMS_ctor(Cmd_t* me){
 			READ_SMS_SIG,//id
 			0,//procid
 			0,//priority
-			"",//initCommand
 			"AT+CMGL=\"ALL\"",//command[50]
 			"AT+CMGD",//finishParam[10];
-			0,//fpInit
 			1,//initDelayMs;
 			0,	//fpSend
 			1,//sendDelayMs
@@ -26,14 +24,14 @@ void readSMS_ctor(Cmd_t* me){
 			1,//receiveDelayMs
 			0,//fpProc
 			1,//retry
-			0//	port
+			0,//	port
+			0//user callback
 	};
 	*me=base;
 
 	me->fpReset=baseReset;
-	me->fpInit=baseInit;
-	me->fpSend=baseSend;
-	me->fpReceive=SMSReceiveAllMsg;
+	me->fpRequest=baseReq;
+	me->fpResponse=SMSReceiveAllMsg;
 	me->fpProc=baseProc;
 }
 
@@ -43,12 +41,12 @@ void readSMS_ctor(Cmd_t* me){
 int32_t SMSReceiveAllMsg(Cmd_t* me){
 
 	int size=0;
-	int32_t res=0;
+
 	char command[]="\r";
 	char output[30];
 	char msg[768]={0};
 	msg[767]=0;//make sure last character is null
-	ReadSMS_t* readSMS=me;
+	ReadSMS_t* readSMS=(ReadSMS_t*)me;
 
 	if(write(me->port, command, strlen(command))==-1)
 		return -1;
@@ -78,7 +76,7 @@ int32_t SMSReceiveAllMsg(Cmd_t* me){
 		char* pos;
 		pos=strstr(msg,"\r\n+CMGL:");
 		SMS_t* heapMsg=malloc(sizeof(SMS_t));
-		size=sscanf(pos,"\r\n+CMGL:%d,\"%[^\"]\",\"%[^\"]\",\"\",\"%[^\,],%[^\"]\"\r\n",&heapMsg->msgId,heapMsg->status,heapMsg->phoneNumber,heapMsg->date,heapMsg->hour);
+		size=sscanf(pos,"\r\n+CMGL:%d,\"%[^\"]\",\"%[^\"]\",\"\",\"%[^,],%[^\"]\"\r\n",&heapMsg->msgId,heapMsg->status,heapMsg->phoneNumber,heapMsg->date,heapMsg->hour);
 		pos=strstr(pos+2,"\r\n");
 		size=sscanf(pos+2,"%[^\r]",heapMsg->message);
 		if(readSMS->SMSReceivedCallBack!=NULL)

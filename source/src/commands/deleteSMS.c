@@ -8,15 +8,13 @@
 #include <commands/deleteSMS.h>
 
 void deleteSMS_ctor(Cmd_t* me){
-	DeleteSMSPacket_T* delSMS=me;
+	DeleteSMSPacket_T* delSMS=(DeleteSMSPacket_T*)me;
 	Cmd_t base={
-			DISABLE_CALL_SIG,//id
+			DELETE_SMS_SIG,//id
 			0,//procid
 			0,//priority
-			"",//initCommand
 			"AT+CMGD=",//command[50]
 			"\r",//finishParam[2];
-			0,//fpInit
 			1,//initDelayMs;
 			0,	//fpSend
 			1,//sendDelayMs
@@ -26,12 +24,12 @@ void deleteSMS_ctor(Cmd_t* me){
 			1,//receiveDelayMs
 			0,//fpProc
 			10,//retry
-			0//	port
+			0,//	port
+			0//user callback
 	};
 	delSMS->super=base;
-	delSMS->super.fpInit=baseInit;
-	delSMS->super.fpSend=delCommand;
-	delSMS->super.fpReceive=baseReceive(me);
+	delSMS->super.fpRequest=delCommand;
+	delSMS->super.fpResponse=baseRes;
 	delSMS->super.fpProc=baseProc;
 
 
@@ -39,10 +37,10 @@ void deleteSMS_ctor(Cmd_t* me){
 
 
 int32_t delCommand(Cmd_t* me){
-	char commandNo[40]={0};
-	char sms[512]={0};
+	char commandNo[70]={0};
+
 	int size=0;
-	int res=0;
+
 	DeleteSMSPacket_T* delCmd=(DeleteSMSPacket_T*)me;
 	size=sprintf(commandNo,"%s=%d",delCmd->super.command,delCmd->msgId);
 

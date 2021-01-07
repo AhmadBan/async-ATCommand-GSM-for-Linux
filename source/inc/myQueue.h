@@ -13,10 +13,10 @@
 #include <stdbool.h>
 #include <pthread.h>
 #include <commands/baseCommand.h>
-#define MAX_QUEUE 6
+#define MAX_QUEUE 10
 
 typedef struct {
-	Command_t* intArray[MAX_QUEUE];
+	Cmd_t* cmdArray[MAX_QUEUE];
 	int front ;
 	int rear ;
 	int itemCount;
@@ -24,7 +24,7 @@ typedef struct {
 	pthread_cond_t cond;
 }MyQueue_t;
 
-Command_t* peek(MyQueue_t* q) ;
+Cmd_t* peek(MyQueue_t* q) ;
 
 bool isEmpty(MyQueue_t* q);
 
@@ -32,8 +32,8 @@ bool isFull(MyQueue_t* q);
 
 int size(MyQueue_t* q);
 
-void insert(MyQueue_t* q,Command_t* data);
+void insert(MyQueue_t* q,Cmd_t* data);
 
-Command_t* removeData(MyQueue_t* q) ;
+Cmd_t* removeData(MyQueue_t* q) ;
 
 #endif /* INC_MYQUEUE_H_ */

@@ -27,8 +27,7 @@ TEST(baseCommandTest, baseCheckReceiveError) {
 	char filename[]="testFile";
 	char content[]="atd09350542618;\r\r\nERROR\r\n";
 	Cmd_t cmd;
-	int ret;
-	ret=remove(filename);
+	remove(filename);
 	fileDescriptor  = open(filename, O_RDWR | O_CREAT);
 	if (fileDescriptor == -1) {
 		perror("File not Found.!");
@@ -47,8 +46,7 @@ TEST(baseCommandTest, baseCheckReceiveOK) {
 	char filename[]="testfile";
 	char content[]="atd09350542618;\r\r\nOK\r\n";
 	Cmd_t cmd;
-	int ret;
-	ret=remove(filename);
+	remove(filename);
 	fileDescriptor  = open(filename, O_RDWR | O_CREAT);
 	if (fileDescriptor == -1) {
 		perror("File not Found.!");
@@ -62,41 +60,13 @@ TEST(baseCommandTest, baseCheckReceiveOK) {
 	EXPECT_EQ(0, baseCheckPort(&cmd));
 }
 
-TEST(baseCommandTest, baseInit) {
-	int fileDescriptor,size=0;
-	char filename[]="testfile";
-
-	char content[100];
-	int ret;
-	ret=remove(filename);
-	fileDescriptor  = open(filename, O_RDWR | O_CREAT);
-	if (fileDescriptor == -1) {
-		perror("File not Found.!");
-		exit(1);
-	}
-	Cmd_t cmd;
-	char initCommand[]="AT+CMGF=1\r";
-	memcpy(cmd.initCommand,initCommand,strlen(initCommand));
-	cmd.initCommand[strlen(initCommand)]=0;
-	cmd.port=fileDescriptor;
-	cmd.initDelayMs=1;
-
-	baseInit(&cmd);
-	close(fileDescriptor);
-	fileDescriptor = open(filename, O_RDONLY);
-	size = read(fileDescriptor, content, 100);
-	content[size]=0;
-
-	EXPECT_EQ(0, strcmp(content,cmd.initCommand));
-
-}
 
 TEST(baseCommandTest, baseSend) {
 	int fileDescriptor,size=0;
 	char filename[]="sendfile";
 	char content[100];
-	int ret;
-	ret=remove(filename);
+
+	remove(filename);
 	fileDescriptor  = open(filename, O_RDWR | O_CREAT);
 	if (fileDescriptor == -1) {
 		perror("File not Found.!");
@@ -121,7 +91,7 @@ TEST(baseCommandTest, baseSend) {
 
 
 TEST(baseCommandTest, baseReceiveTest) {
-	int fileDescriptor,size=0;
+	int fileDescriptor=0;
 	char filename[]="testFile";
 	char content[]="cat\r\r\nOK\r\n";
 	char output[100]={0};
@@ -146,7 +116,7 @@ TEST(baseCommandTest, baseReceiveTest) {
 	ret=baseReceive(&cmd);
 	close(fileDescriptor);
 	fileDescriptor = open(filename, O_RDONLY);
-	size = read(fileDescriptor, output, 1);
+	read(fileDescriptor, output, 1);
 
 	EXPECT_EQ(0,strcmp("\r",output));
 	EXPECT_EQ(0,ret);

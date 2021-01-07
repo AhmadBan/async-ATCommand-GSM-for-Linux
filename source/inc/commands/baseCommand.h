@@ -18,56 +18,52 @@
 
 enum{
 	SMS_SEND_SIG=0,
-
+	DISABLE_SMS_NOTIFICATION_SIG,
+	DISABLE_CALL_SIG,
+	READ_SMS_SIG,
+	SMS_TEXT_MODE_SIG,
+	DELETE_SMS_SIG,
+	GET_OPERATOR_SIG,
+	ECHO_SIG
 
 };
 
-typedef struct Command_t Command_t;
+typedef struct Cmd_t Cmd_t;
 
-struct Command_t{
+ struct Cmd_t{
 
 	uint8_t id;
 	uint8_t procId;
 	uint8_t priority;
-	char initCommand[50];
-	char command[50]; //I think all command is not more than 50 character
-	// sim800 supports up to 512 character buffer so if at worse case
-	//50 character used for command 512-50=458 characters remain for
-	//parameter which I use 450 character
-	char commandParam[450];
-	char finishParam[10];
-	int32_t (*fpInit)(struct Command_t* this);
+	char command[50]; //I think maximum length of a command must not be more than 50 character
+	char finishParam[20];
 	uint16_t initDelayMs;
-	int32_t (*fpSend)(struct Command_t* this);
+	int32_t (*fpRequest)(struct Cmd_t* me);
 	uint16_t sendDelayMs;
-	int32_t (*fpReceive)(struct Command_t* this);
-	char expectedAnswerOnSucessCommand[100];
-	char expectedAnswerOnError[100];
+	int32_t (*fpResponse)(struct Cmd_t* me);
+	char expectedAnswerOnSucessCommand[10];
+	char expectedAnswerOnError[10];
 	uint16_t receiveDelayMs;
-	int32_t (*fpProc)(struct Command_t* this);
+	int32_t (*fpProc)(struct Cmd_t* me);
 	int8_t retry;
-	void (*fpReset)(void);
+	int32_t (*fpReset)(struct Cmd_t* me);
 	int port;
-	int32_t (*fpCtor)(struct Command_t* this);
+	void (*fpCallBackOnSuccess)(Cmd_t* me);
+	void (*fpCallBackOnError)(Cmd_t* me);
 };
 
 typedef  void (*pCtorFunc)(void);
-void base_ctor(Command_t *pbase);
-int baseCheckPort(Command_t* this);
+void base_ctor(Cmd_t *pbase);
+int baseCheckPort(struct Cmd_t* me);
 
 
-//This function init sim800 to get ready before main command
-//returns -1 on Port problem
-//returns 1 on error
-//returns 0 on success
-int32_t baseInit(Command_t* this);
 
 
 //Send start command part of a command and take thread to sleep for sendDelayMs.
 //returns -1 on Port problem
 //returns 1 on error
 //returns 0 on success
-int32_t baseSend(Command_t* this);
+int32_t baseReq(Cmd_t* me);
 
 
 
@@ -76,12 +72,12 @@ int32_t baseSend(Command_t* this);
 //returns -1 on Port problem
 //returns 1 on error
 //returns 0 on success
-int32_t baseReceive(Command_t* this);
+int32_t baseRes(Cmd_t* me);
 
-
+int32_t baseReset(Cmd_t* me);
 //base procedures to send command and get result
 //returns -1 on Port problem
 //returns 1 on error
 //returns 0 on success
-int32_t baseProc(Command_t* this);
+int32_t baseProc(Cmd_t* me);
 #endif /* INC_PACKETS_H_ */

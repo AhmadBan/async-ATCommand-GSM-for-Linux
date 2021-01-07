@@ -8,6 +8,7 @@
 #ifndef INC_COMMANDS_READSMS_H_
 #define INC_COMMANDS_READSMS_H_
 #include <commands/baseCommand.h>
+#include <commands/deleteSMS.h>
 typedef struct{
 	int msgId;
 	char date[15];

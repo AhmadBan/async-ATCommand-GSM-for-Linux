@@ -90,9 +90,9 @@ TEST(SMSCommandTest, SMSReadTestReceive) {
 	int fileDescriptor;
 	char filename[]="readSmsFile";
 	ReadSMS_t cmd;
-	int ret,size;
+	int ret;
 	char content[]="0\r\n+CMGL: 1,\"REC READ\",\"+989350542618\",\"\",\"20/12/10,21:46:48+14\"\r\nHello world this is 2\nThis is 3\n\n\r\n0000000000\r\nOK\r\n";
-	char output[60];
+
 	ret=remove(filename);
 	readSMS_ctor(&cmd.super);
 	cmd.SMSReceivedCallBack=testCallback;
@@ -122,7 +122,7 @@ TEST(SMSCommandTest, SMSReadTestReceiveMultipleSms) {
 	int fileDescriptor;
 	char filename[]="readSmsFile";
 	ReadSMS_t cmd;
-	int ret,size;
+	int ret;
 	char content[]="\r\n\
 +CMGL: 1,\"REC READ\",\"+989350542618\",\"\",\"20/12/10,21:46:48+14\"\r\n\
 Hello world this is 2\n\
@@ -161,7 +161,7 @@ vuuuc 64rthbbbfgfucux\r\n\
 \r\n\
 OK\r\n\
 ";
-	char output[60];
+
 	ret=remove(filename);
 	readSMS_ctor(&cmd.super);
 	cmd.SMSReceivedCallBack=testCallback;
