@@ -24,12 +24,50 @@ char portAddress[]="/dev/ttyUSB0";
 
 //global instantiation of Queue
 MyQueue_t globalQ;
+/*
+ * this callback executes in case of reading sms error
+ * or problem in deleting read sms
+ */
+int readSMSErrorCallback(Cmd_t* me){
+	/*
+	 * do something for handling error here
+	 * check if me arg has the id equal to zero it means error in reading stage
+	 * otherwise error in deleting message occurs
+	 */
 
+}
+/*
+ * this callback executes in case of reading sms sucessfully
+ * if it returns 0 the read SMS will be deleted otherwise nothing will be
+ * happend
+ */
+int readSMSSuccessCallback(Cmd_t* me){
+	ReadSMS_t* newSMS=(ReadSMS_t*)me;
 
+	printf("SMS Date is %s\n",newSMS->sms.date);
+	printf("SMS Hour is %s\n",newSMS->sms.hour);
+	printf("SMS is from %s\n",newSMS->sms.phoneNumber);
+	printf("SMS status is %s\n",newSMS->sms.status);
+	printf("SMS id is %d\n",newSMS->sms.msgId);
+	printf("SMS message is %s\n",newSMS->sms.message);
 
+	/*
+	 * you can also delete message yourself here
+	 * in this case you must return none zero value
+	 */
+//	DeleteSMSPacket_T* delSMS=malloc(sizeof(DeleteSMSPacket_T));
+//	deleteSMS_ctor((Cmd_t*)delSMS);
+//	delSMS->msgId=readSMS->sms.msgId;
+//	delSMS->super.fpCallBackOnError=yourCallbackFunctionOnError;
+//	delSMS->super.fpProc(delSMS);
+//	return 1;
+
+	return 0;
+
+}
 
 void sendExampleSMS(MyQueue_t *mq){
-	char message[]="Hello World\n";
+	char message[]="Ahmad.Baneshi@gmail.com\n My Github github.com/AhmadBan\n My LinkedIn linkedin.com/in/ahmad-banshee/";
 	char phone[]="989350542618";
 	SMSPacket_T *sendSms=malloc(sizeof(SMSPacket_T));
 	SMSSend_ctor((Cmd_t*)sendSms);
@@ -47,12 +85,12 @@ void sendExampleSMS(MyQueue_t *mq){
 
 
 int main(){
-	pthread_t thread1;
-	MyQueue_t *mq = &globalQ;
-	serialPort=gsmSetup(portAddress,mq,&thread1);
+	pthread_t queueThread,readSMSPollingThread;
+	pthread_t thread[]={queueThread,readSMSPollingThread};
+	GSM_t *gsm=	gsmSetup(portAddress,10,thread);
+	//sendExampleSMS(&gsm->mq);
 	while(1){
 		printf("test main\n");
-
 		sleep(1);
 	}
 

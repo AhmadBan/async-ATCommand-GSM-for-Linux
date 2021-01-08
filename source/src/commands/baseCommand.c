@@ -7,6 +7,7 @@
 
 #include <commands/baseCommand.h>
 
+#include <termios.h>
 //after each command it checks the port for error.
 //returns -1 on Port problem
 //returns 1 on error
@@ -17,12 +18,8 @@ int baseCheckPort(Cmd_t* me){
 
 
 	size=read(me->port, temp, 100);
-	if(size<0){
-		perror("File not Found.!");
 
-		return -1;
-	}
-	else if(size>0)
+	if(size>0)
 	{
 		if(strstr(temp, "ERROR") != NULL)
 			return 1;
@@ -55,9 +52,9 @@ int32_t baseRes(Cmd_t* me){
 	for(int i=0;i<me->retry;i++){//attempt 10 times in worst cases
 		sleep(me->respDelayMs);
 		size=read(me->port, content, 100);
-		if(size<0)
-			return -1;
-		else if(size>0)
+//		if(size<0)
+//			return -1;
+		if(size>0)
 			break;
 
 		if(i==me->retry-1)
@@ -77,28 +74,30 @@ int32_t baseRes(Cmd_t* me){
 //returns 1 on error
 //returns 0 on success
 int32_t baseProc(Cmd_t* me){
+
 	int32_t res;
+	int status= tcflush(me->port, TCIFLUSH);
 	res=me->fpRequest(me);
 	if(res!=0){
 		if(me->fpCallBackOnError!=NULL)
-						me->fpCallBackOnError(me);
+			me->fpCallBackOnError(me);
 		return res;
 	}
 	res=me->fpResponse(me);
 	if(res!=0){
 		if(me->fpCallBackOnError!=NULL)
-								me->fpCallBackOnError(me);
+			me->fpCallBackOnError(me);
 		return res;
 	}
 	if(me->fpCallBackOnSuccess!=NULL)
-			me->fpCallBackOnSuccess(me);
+		me->fpCallBackOnSuccess(me);
 	return 0;
 
 }
 
 
 int32_t baseReset(Cmd_t* me){
-	printf("implement a base reset here");
+	printf("implement a base reset here\n");
 	return 1;
 }
 

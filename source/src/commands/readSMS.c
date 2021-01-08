@@ -31,14 +31,14 @@ void readSMS_ctor(Cmd_t* me){
 
 	me->fpReset=baseReset;
 	me->fpRequest=baseReq;
-	me->fpResponse=SMSReceiveAllMsg;
-	me->fpProc=baseProc;
+	me->fpResponse=readSMSResponse;
+	me->fpProc=readSMSProc;
 }
 
 
 
 
-int32_t SMSReceiveAllMsg(Cmd_t* me){
+int32_t readSMSResponse(Cmd_t* me){
 
 	int size=0;
 
@@ -48,14 +48,23 @@ int32_t SMSReceiveAllMsg(Cmd_t* me){
 	msg[767]=0;//make sure last character is null
 	ReadSMS_t* readSMS=(ReadSMS_t*)me;
 
-	if(write(me->port, command, strlen(command))==-1)
+	if(write(me->port, command, strlen(command))==-1){
+		if(readSMS->super.fpCallBackOnError!=NULL)
+			readSMS->super.fpCallBackOnError((Cmd_t*)readSMS);
+
 		return -1;
+	}
 	for(int i=0;i<me->retry;i++){//attempt 10 times in worst cases
 		sleep(me->respDelayMs);
 		size=read(me->port, msg, 767);
-		if(size<0)
-			return -1;
-		else if(size>0)
+		//		if(size<0)
+		//		{
+		//			if(readSMS->super.fpCallBackOnError!=NULL)
+		//				readSMS->super.fpCallBackOnError((Cmd_t*)readSMS);
+		//
+		//			return -1;
+		//		}
+		if(size>0)
 			break;
 
 		if(i==me->retry-1)
@@ -63,47 +72,73 @@ int32_t SMSReceiveAllMsg(Cmd_t* me){
 	}
 
 	//if program reach here then means it received something
-	if(strstr(msg,me->expectedAnswerOnError)!= NULL)
+	if(strstr(msg,me->expectedAnswerOnError)!= NULL){
+		if(readSMS->super.fpCallBackOnError!=NULL)
+			readSMS->super.fpCallBackOnError((Cmd_t*)readSMS);
+
 		return 1;
-	else{
-		//			\r\n
-		//			+CMGL: 1,"REC READ","+989350542618","","20/12/10,21:46:48+14"\r\n
-		//			Hello world this is 2\n
-		//			This is 3\n
-		//			\n
-		//			\r\n
-		int size=0;
-		char* pos;
-		pos=strstr(msg,"\r\n+CMGL:");
-		SMS_t* heapMsg=malloc(sizeof(SMS_t));
-		size=sscanf(pos,"\r\n+CMGL:%d,\"%[^\"]\",\"%[^\"]\",\"\",\"%[^,],%[^\"]\"\r\n",&heapMsg->msgId,heapMsg->status,heapMsg->phoneNumber,heapMsg->date,heapMsg->hour);
-		pos=strstr(pos+2,"\r\n");
-		size=sscanf(pos+2,"%[^\r]",heapMsg->message);
-		if(readSMS->SMSReceivedCallBack!=NULL)
-			readSMS->SMSReceivedCallBack(heapMsg);
-		//delete the read message from memory
-		size=sprintf(output,"%s=%d\r",me->finishParam,heapMsg->msgId);
-		free(heapMsg);//free allocated memory
-		if(write(me->port, output, size)==-1){
-			return -1;
-		}
-		for(int i=0;i<me->retry;i++){//attempt 10 times in worst cases
-			sleep(me->respDelayMs);
-			size=read(me->port, msg, 20);
-			if(size<0)
-				return -1;
-			else if(size>0)
-				break;
-
-			if(i==me->retry-1)
-				me->fpReset(me);//all retry failed so reset sim800l
-		}
-
-		if(strstr(msg,me->expectedAnswerOnError)!= NULL)
-				return 1;
-		else
-			return 0;
-
 	}
+	//			\r\n
+	//			+CMGL: 1,"REC READ","+989350542618","","20/12/10,21:46:48+14"\r\n
+	//			Hello world this is 2\n
+	//			This is 3\n
+	//			\n
+	//			\r\n
+
+	char* pos;
+	pos=strstr(msg,"\r\n+CMGL:");
+	if(pos!=NULL)
+		size=sscanf(pos,"\r\n+CMGL:%d,\"%[^\"]\",\"%[^\"]\",\"\",\"%[^,],%[^\"]\"\r\n",&readSMS->sms.msgId,readSMS->sms.status,readSMS->sms.phoneNumber,readSMS->sms.date,readSMS->sms.hour);
+	else
+		return 0;
+	pos=strstr(pos+2,"\r\n");
+	if(pos!=NULL)
+		size=sscanf(pos+2,"%[^\r]",readSMS->sms.message);
+	else
+		return 0;
+	/*
+	 * TODO:to delete Read SMS we can not use queue to send a delete command
+	 * rather we better delete the SMS while we read it synchronously because a
+	 * another READ_SMS_SIG command may be already in queue in a higher order
+	 * before we send the delete command and thus we may read a SMS twice and
+	 * that might be interpreted as we received it twice unless one considers
+	 * Date and Time in readSMSCallback to prevent it.
+	 */
+
+
 	return 0;
 }
+
+
+int32_t readSMSProc(Cmd_t* me){
+
+	int32_t res,callBackReturn=0;
+	ReadSMS_t* readSMS=(ReadSMS_t*)me;
+	int status= tcflush(me->port, TCIFLUSH);
+	res=me->fpRequest(me);
+	if(res!=0){
+		if(me->fpCallBackOnError!=NULL)
+			me->fpCallBackOnError(me);
+		return res;
+	}
+	res=me->fpResponse(me);
+	if(res!=0){
+		if(me->fpCallBackOnError!=NULL)
+			me->fpCallBackOnError(me);
+		return res;
+	}
+	if(me->fpCallBackOnSuccess!=NULL)
+		callBackReturn=me->fpCallBackOnSuccess(me);
+	if(callBackReturn==0){
+			DeleteSMSPacket_T* delSMS=malloc(sizeof(DeleteSMSPacket_T));
+			deleteSMS_ctor((Cmd_t*)delSMS);
+			delSMS->super.port=readSMS->super.port;
+			delSMS->msgId=readSMS->sms.msgId;
+			delSMS->super.fpCallBackOnError=readSMS->super.fpCallBackOnError;
+			delSMS->super.fpProc(delSMS);
+		}
+	return 0;
+
+}
+
+

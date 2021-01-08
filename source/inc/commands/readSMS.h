@@ -9,6 +9,7 @@
 #define INC_COMMANDS_READSMS_H_
 #include <commands/baseCommand.h>
 #include <commands/deleteSMS.h>
+#include <termios.h>
 typedef struct{
 	int msgId;
 	char date[15];
@@ -20,8 +21,9 @@ typedef struct{
 
 typedef struct{
 	Cmd_t super;
-	void (*SMSReceivedCallBack)(SMS_t* sms);
+	SMS_t  sms;
 }ReadSMS_t;
 void readSMS_ctor(Cmd_t* me);
-int32_t SMSReceiveAllMsg(Cmd_t* me);
+int32_t readSMSResponse(Cmd_t* me);
+int32_t readSMSProc(Cmd_t* me);
 #endif /* INC_COMMANDS_READSMS_H_ */

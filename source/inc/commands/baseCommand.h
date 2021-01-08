@@ -47,8 +47,8 @@ typedef struct Cmd_t Cmd_t;
 	int8_t retry;//number of attempts if request fails
 	int32_t (*fpReset)(struct Cmd_t* me);//function pointer for method that reset GSM
 	int port;//serial port file Descriptor
-	void (*fpCallBackOnSuccess)(Cmd_t* me);//function pointer that executes if request return successful (it is assigned by user)
-	void (*fpCallBackOnError)(Cmd_t* me);//function pointer that executes if request return unsuccessful (it is assigned by user)
+	int (*fpCallBackOnSuccess)(Cmd_t* me);//function pointer that executes if request return successful (it is assigned by user)
+	int (*fpCallBackOnError)(Cmd_t* me);//function pointer that executes if request return unsuccessful (it is assigned by user)
 };
 
 typedef  void (*pCtorFunc)(void);

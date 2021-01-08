@@ -47,9 +47,9 @@ int32_t SMSReceiveResponse(Cmd_t* me){
 	for(int i=0;i<me->retry;i++){//attempt 10 times in worst cases
 		sleep(me->respDelayMs);
 		size=read(me->port, content, 100);
-		if(size<0)
-			return -1;
-		else if(size>0)
+//		if(size<0)
+//			return -1;
+		if(size>0)
 			break;
 
 		if(i==me->retry-1)

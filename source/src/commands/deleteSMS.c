@@ -13,7 +13,7 @@ void deleteSMS_ctor(Cmd_t* me){
 			DELETE_SMS_SIG,//id
 			0,//procid
 			0,//priority
-			"AT+CMGD=",//command[50]
+			"AT+CMGD",//command[50]
 			"\r",//finishParam[2];
 			0,	//fpSend
 			1,//sendDelayMs

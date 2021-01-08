@@ -57,11 +57,11 @@ void initQueue(MyQueue_t* myQ){
 	if(pthread_mutex_init(&myQ->mu_queue, NULL)!=0)
 	{
 		printf("\n mutex init has failed\n");
-	    return 1;
+	    return;
 	}
 	 if(pthread_cond_init(&myQ->cond, NULL)!=0){
 		 printf("\n cond init has failed\n");
-		 return 1;
+		 return;
 	 }
 }
 int addToQueue(Cmd_t* cmd,MyQueue_t* myQ){

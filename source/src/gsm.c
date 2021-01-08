@@ -17,7 +17,7 @@ int open_port(char* portAddress)
 	int fd; /* File descriptor for the port */
 	struct termios options;
 
-	fd = open(portAddress, O_RDWR | O_NOCTTY | O_NDELAY);
+	fd = open(portAddress, O_RDWR | O_NOCTTY | O_NDELAY|O_NONBLOCK);
 	if (fd == -1)
 	{
 		/*
@@ -58,7 +58,7 @@ int open_port(char* portAddress)
 	options.c_lflag &= ~(ICANON | ECHO | ECHOE | ISIG);//raw input disable echo
 	options.c_iflag &= ~(IXON | IXOFF | IXANY);//disable software flow control
 	options.c_oflag &= ~OPOST;//select raw output
-
+	options.c_iflag &= ~(IGNBRK | BRKINT | PARMRK | ISTRIP | INLCR | IGNCR | ICRNL | IXON); //tty is the name of the struct termios
 	/*
 	 * Set the new options for the port...
 	 */
@@ -82,17 +82,14 @@ void getOperator(Cmd_t* operator){
 }
 
 
-static int initGSM(char * portAddress,MyQueue_t *mq){
+void initGSM(GSM_t* gsm){
 
 	//check if GSM connects to network by checking operator name
-	GetOperator_t *getOp=malloc(sizeof(GetOperator_t));
-	int serialPort=open_port(portAddress);
-	if(serialPort==-1){
-		free(getOp);
-		return -1;
-	}
+	printf("initGSM Function\n");
+	printf("getting Operator\n");
+	GetOperator_t *getOp=calloc(1,sizeof(GetOperator_t));
 	getOperator_ctor((Cmd_t*)getOp);
-	getOp->super.port=serialPort;
+	getOp->super.port=gsm->port;
 	getOp->super.fpCallBackOnSuccess=getOperator;
 	do{
 		getOp->super.fpProc((Cmd_t*)getOp);
@@ -100,65 +97,105 @@ static int initGSM(char * portAddress,MyQueue_t *mq){
 	while(gsmReady!=1);//wait until GSM module find an operator
 
 	//DISABLE CALL AND SMS NOTIFICATION SO IT DOES NOT INTERRUPT ANSWER FROM A COMMAND
-	Cmd_t *smsNotifDisable=malloc(sizeof(Cmd_t));
+	printf("disabling sms notificationr\n");
+	Cmd_t *smsNotifDisable=calloc(1,sizeof(Cmd_t));
 	disableSMSNotif_ctor(smsNotifDisable);
-	smsNotifDisable->port=serialPort;
-	addToQueue(smsNotifDisable,mq);
-
-	Cmd_t *disableCall=malloc(sizeof(Cmd_t));
+	addToQueue(smsNotifDisable,&gsm->mq);
+	printf("disabling call notificationr\n");
+	Cmd_t *disableCall=calloc(1,sizeof(Cmd_t));
 	disableCall_ctor(disableCall);
-	disableCall->port=serialPort;
-	addToQueue(disableCall,mq);
+	addToQueue(disableCall,&gsm->mq);
 	//enable text mode sms
-	Cmd_t *textSMS=malloc(sizeof(Cmd_t));
+	printf("change sms mode to text\n");
+	Cmd_t *textSMS=calloc(1,sizeof(Cmd_t));
 	textModeSMS_ctor(textSMS);
-	textSMS->port=serialPort;
-	addToQueue(textSMS,mq);
+	addToQueue(textSMS,&gsm->mq);
 
-	return serialPort;
+
 
 }
 
 
 
-int gsmSetup(char * portAddress,MyQueue_t *mq,pthread_t *thread){
-
+GSM_t* gsmSetup(char * portAddress,int polligInSMSPeriod,pthread_t *thread){
+	printf("gsmSetup function\n");
 	int status;         // Status Variable to store the Status of the thread.
-	initQueue(mq);
-
-	status = pthread_create(thread, NULL, gsmLoop, mq);
+	static GSM_t gsm;
+	initQueue(&gsm.mq);
+	gsm.inputSMSPollingPeriod=polligInSMSPeriod;
+	gsm.port=open_port(portAddress);
+	if(gsm.port==-1){
+		return NULL;
+	}
+	printf("creating q thread\n");
+	status = pthread_create(&thread[0], NULL, gsmQueueExecution, &gsm);
 	/*  status = 0 ==> If thread is created Sucessfully.
 	           status = 1 ==> If thread is unable to create.   */
 	if(!status){
-		printf("Custom Created Successfully.\n");
+		printf("gsmQueueExecution Created Successfully.\n");
 	}else{
 		printf("Unable to create the Custom Thread.\n");
-		return -1;
+		return NULL;
 	}
-	return initGSM(portAddress,mq);
+	initGSM(&gsm);
+	printf("creating Poll thread\n");
+	status = pthread_create(&thread[1], NULL, gsmPollingReadSMS, &gsm);
+	/*  status = 0 ==> If thread is created Sucessfully.
+		           status = 1 ==> If thread is unable to create.   */
+	if(!status){
+		printf("gsmPollingReadSMS Created Successfully.\n");
+	}else{
+		printf("Unable to create the Custom Thread.\n");
+		return NULL;
+	}
+
+
+	return &gsm;
 }
 
 
-void *gsmLoop(void *myQ){
-	MyQueue_t* mq=myQ;
-		pthread_mutex_lock(&mq->mu_queue);
-		while(1){
-		if(!isEmpty(mq))
+void *gsmQueueExecution(void * gsm){
+	printf("gsmQueueExecution function\n");
+	GSM_t* lgsm=gsm;
+	pthread_mutex_lock(&lgsm->mq.mu_queue);
+	while(1){
+		if(!isEmpty(&lgsm->mq))
 		{
-			Cmd_t* cmd =(Cmd_t*)peek( mq);
+			Cmd_t* cmd =(Cmd_t*)peek( &lgsm->mq);
+			cmd->port=lgsm->port;
 			printf("gsm thread executing command %d\n",cmd->id);
 			if(cmd->fpProc(cmd)!=1)
-				free(removeData( mq));//delete processed data from queue
-			pthread_mutex_unlock(&mq->mu_queue);
+				free(removeData( &lgsm->mq));//delete processed data from queue
+			pthread_mutex_unlock(&lgsm->mq.mu_queue);
 
 		}
 		else
 		{
 
-				printf("waiting for condition\n");
-				pthread_cond_wait(&mq->cond, &mq->mu_queue);
+			printf("waiting for condition\n");
+			pthread_cond_wait(&lgsm->mq.cond, &lgsm->mq.mu_queue);
 
 		}
 	}
 	pthread_exit(NULL);
 }
+extern int readSMSSuccessCallback(Cmd_t* me);
+extern int readSMSErrorCallback(Cmd_t* me);
+
+void *gsmPollingReadSMS(void *gsm){
+	printf("gsmPollingReadSMS function\n");
+	GSM_t* lgsm=gsm;
+	while(1){
+		ReadSMS_t* readsSMS=calloc(1,sizeof(ReadSMS_t));
+
+		readSMS_ctor((Cmd_t*)readsSMS);
+		readsSMS->super.fpCallBackOnSuccess=readSMSSuccessCallback;
+		readsSMS->super.fpCallBackOnError=readSMSErrorCallback;
+
+		addToQueue((Cmd_t*)readsSMS,&lgsm->mq);
+		printf("add sms read event to queue\n");
+		sleep(lgsm->inputSMSPollingPeriod);
+	}
+}
+
+

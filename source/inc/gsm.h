@@ -25,10 +25,15 @@
 #include "commands/smsTextMode.h"
 #include "commands/disableSMSNotif.h"
 #include "commands/disableCall.h"
+#include "commands/readSMS.h"
 #include "myQueue.h"
+typedef struct {
+	MyQueue_t mq;
+	int port;
+	int inputSMSPollingPeriod;
+}GSM_t;
 
-
-int gsmSetup(char * portAddress,MyQueue_t *mq,pthread_t *thread);
-void *gsmLoop(void *mq);
-
+GSM_t* gsmSetup(char * portAddress,int polligInSMSPeriod,pthread_t *thread);
+void *gsmQueueExecution(void * gsm);
+void *gsmPollingReadSMS(void *gsm);
 #endif /* INC_GSM_H_ */
