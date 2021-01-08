@@ -33,7 +33,7 @@ typedef struct {
 	int inputSMSPollingPeriod;
 }GSM_t;
 
-GSM_t* gsmSetup(char * portAddress,int polligInSMSPeriod,pthread_t *thread);
+GSM_t* gsmSetup(char * portAddress,int polligInSMSPeriod);
 void *gsmQueueExecution(void * gsm);
 void *gsmPollingReadSMS(void *gsm);
 #endif /* INC_GSM_H_ */

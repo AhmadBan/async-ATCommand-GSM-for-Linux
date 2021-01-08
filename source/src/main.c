@@ -18,9 +18,9 @@
 #include <Config.h>
 #include "gsm.h"
 
-int serialPort;
-char portAddress[]="/dev/ttyUSB0";
 
+char portAddress[]="/dev/ttyUSB0";
+GSM_t *gsm;
 
 //global instantiation of Queue
 MyQueue_t globalQ;
@@ -85,9 +85,7 @@ void sendExampleSMS(MyQueue_t *mq){
 
 
 int main(){
-	pthread_t queueThread,readSMSPollingThread;
-	pthread_t thread[]={queueThread,readSMSPollingThread};
-	GSM_t *gsm=	gsmSetup(portAddress,10,thread);
+	gsm=gsmSetup(portAddress,10);
 	//sendExampleSMS(&gsm->mq);
 	while(1){
 		printf("test main\n");

@@ -13,8 +13,8 @@ void readSMS_ctor(Cmd_t* me){
 			READ_SMS_SIG,//id
 			0,//procid
 			0,//priority
-			"AT+CMGL=\"ALL\"",//command[50]
-			"AT+CMGD",//finishParam[10];
+			"AT+CMGL=",//command[50]
+			"\"ALL\"\r",//finishParam[10];
 			0,	//fpSend
 			1,//sendDelayMs
 			0,//fpReceive

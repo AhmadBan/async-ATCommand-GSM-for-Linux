@@ -78,7 +78,7 @@ void getOperator(Cmd_t* operator){
 	else{
 		gsmReady=0;
 	}
-
+	free(operator);
 }
 
 
@@ -117,10 +117,11 @@ void initGSM(GSM_t* gsm){
 
 
 
-GSM_t* gsmSetup(char * portAddress,int polligInSMSPeriod,pthread_t *thread){
+GSM_t* gsmSetup(char * portAddress,int polligInSMSPeriod){
 	printf("gsmSetup function\n");
 	int status;         // Status Variable to store the Status of the thread.
 	static GSM_t gsm;
+	static pthread_t queueThread,readSMSPollingThread;
 	initQueue(&gsm.mq);
 	gsm.inputSMSPollingPeriod=polligInSMSPeriod;
 	gsm.port=open_port(portAddress);
@@ -128,7 +129,7 @@ GSM_t* gsmSetup(char * portAddress,int polligInSMSPeriod,pthread_t *thread){
 		return NULL;
 	}
 	printf("creating q thread\n");
-	status = pthread_create(&thread[0], NULL, gsmQueueExecution, &gsm);
+	status = pthread_create(&queueThread, NULL, gsmQueueExecution, &gsm);
 	/*  status = 0 ==> If thread is created Sucessfully.
 	           status = 1 ==> If thread is unable to create.   */
 	if(!status){
@@ -139,7 +140,7 @@ GSM_t* gsmSetup(char * portAddress,int polligInSMSPeriod,pthread_t *thread){
 	}
 	initGSM(&gsm);
 	printf("creating Poll thread\n");
-	status = pthread_create(&thread[1], NULL, gsmPollingReadSMS, &gsm);
+	status = pthread_create(&readSMSPollingThread, NULL, gsmPollingReadSMS, &gsm);
 	/*  status = 0 ==> If thread is created Sucessfully.
 		           status = 1 ==> If thread is unable to create.   */
 	if(!status){

@@ -71,7 +71,7 @@ void SMSSend_ctor(Cmd_t* me){
 			0,//procid
 			0,//priority
 			"AT+CMGS",//command[50]
-			"\032",//finishParam[2];
+			"\032",//finishParam[20];
 			0,	//fpSend
 			1,//sendDelayMs
 			0,//fpReceive
