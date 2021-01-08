@@ -1,13 +1,13 @@
 # AT command Library for GSM module in Linux
 
-This is a library for using GSM features asynchronously in Linux.
+It is a library for using GSM features asynchronously in Linux.
 
 # How to use the library?
 
-## How to run library thread?
+## Getting Start
 
 
-just Add the Address of your serial port and period of polling in seconds and that's it !!!
+Simply Add the Address of your serial port and period of polling in seconds and, that's it !!!
 
 ```C
 char portAddress[]="/dev/ttyUSB0";
@@ -25,11 +25,11 @@ int main(){
 
 ## How to execute a command?
 
-executing command can be either synchronously and asynchronously.
+Executing command can be either synchronously and asynchronously.
 
 ### **ASynchronous**
 
-To execute a command Asynchronously first instantiate an instance of that command from the heap then initialize it with its constructors then send it to the program Command Queue.
+To execute a command Asynchronously, first, instantiate an instance of that command from the heap, then initialize it with its constructors then send it to the program Command Queue.
 
 ```C
 Cmd_t *command=calloc(1,sizeof(Cmd_t));// allocate command from heap
@@ -37,11 +37,11 @@ Command_ctor(command);//initialize the command.
 addToQueue(command,&gsm->mq);// add command to Command Queue
 ```
 
-For some commands that have additional parameters, you should initialize the parameter outside the constructor. for example to send an SMS
+For some commands that have additional parameters, you should initialize the parameter outside the constructor. for example, to send an SMS
 
 ```C
 /*Command structure for sending an SMS
- * Notice that Cmd_t must be the first element of the Struct so that this struct is a child of Cmd_t
+ * Notice that Cmd_t must be the first element of the struct so that this struct is a child of Cmd_t
  */
 
 typedef struct{
@@ -68,7 +68,7 @@ memcpy(sendSms->phoneNumber,phone,strlen(phone));
 addToQueue((Cmd_t*)sendSms,mq);
 ```
 
-Finally to add your custom callback function to executes in case of an error or a success just initialize "fpCallBackOnSuccess" and "fpCallBackOnError" with your custom function. for example
+Finally, to add your custom callback function to executes in case of an error or a success just, initialize "fpCallBackOnSuccess" and "fpCallBackOnError" with your custom function. for example
 
 ```C
 //declare and implementing your callback function
@@ -93,11 +93,11 @@ addToQueue((Cmd_t*)sendSms,mq);
 
 ```
 
-Notice that by default if a command executes successfully it is automatically removed from Command Queue and then it is freed from the heap and otherwise the command stays in Command Queue and executes again.
+Notice that by default, if a command executes successfully, it is automatically removed from Command Queue. Then, it freed from the heap. Otherwise, the command stays in Command Queue and executes again.
 
 ### **Synchronous**
 
-Executing a command synchronously is similar to above but instead of executing the command in another thread you should call the "fpProc" function of that command in your program and wait for it to finish. However, you should initialize the port parameter while you are instantiating the command, and also you are responsible to free your allocated memory yourself.
+Executing a command synchronously is similar to the above, but instead of executing the command in another thread, you should call the "fpProc" function of that command in your program and wait for it to finish. However, you should initialize the port parameter while you are instantiating the command, and also you are responsible to free your allocated memory yourself.
 
 ```C
 //sucessful callback
@@ -153,7 +153,7 @@ int main(){
 ```
 # How this library structured?
 
-Everything is working around a thread and a queue that holds all commands that are going to be executed in the GSM module. You fill the queue inside your code and the library does everything for you and by declaring a callback function you can be informed about the result(Either an OK or ERROR or more).
+Everything is working around a thread and a queue that holds all commands that are going to be executed in the GSM module. You fill the queue inside your code and the library does everything for you and, by declaring a callback function, you can be informed about the result(Either an OK or ERROR or more).
 
 ### commands
 
