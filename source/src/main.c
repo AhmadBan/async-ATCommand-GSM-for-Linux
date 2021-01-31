@@ -34,12 +34,12 @@ int readSMSErrorCallback(Cmd_t* me){
 	 * check if me arg has the id equal to zero it means error in reading stage
 	 * otherwise error in deleting message occurs
 	 */
-
+	return 0;
 }
 /*
  * this callback executes in case of reading sms sucessfully
  * if it returns 0 the read SMS will be deleted otherwise nothing will be
- * happend
+ * happened
  */
 int readSMSSuccessCallback(Cmd_t* me){
 	ReadSMS_t* newSMS=(ReadSMS_t*)me;
@@ -66,16 +66,16 @@ int readSMSSuccessCallback(Cmd_t* me){
 
 }
 
-void sendExampleSMS(MyQueue_t *mq){
+void sendExampleSMS(GSM_t *gsm){
 	char message[]="Ahmad.Baneshi@gmail.com\n My Github github.com/AhmadBan\n My LinkedIn linkedin.com/in/ahmad-banshee/";
 	char phone[]="989350542618";
 	SMSPacket_T *sendSms=malloc(sizeof(SMSPacket_T));
 	SMSSend_ctor((Cmd_t*)sendSms);
-	sendSms->super.port=serialPort;
+	sendSms->super.port=gsm->port;
 	memcpy(sendSms->message,message,strlen(message));
 	memcpy(sendSms->phoneNumber,phone,strlen(phone));
 
-	addToQueue((Cmd_t*)sendSms,mq);
+	addToQueue((Cmd_t*)sendSms,&gsm->mq);
 }
 
 
@@ -86,7 +86,7 @@ void sendExampleSMS(MyQueue_t *mq){
 
 int main(){
 	gsm=gsmSetup(portAddress,10);
-	//sendExampleSMS(&gsm->mq);
+	sendExampleSMS(gsm);
 	while(1){
 		printf("test main\n");
 		sleep(1);
